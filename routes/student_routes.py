@@ -100,18 +100,15 @@ def update_progress():
 
     db = get_db()
     try:
-        exists = db.execute(
-            'SELECT 1 FROM progresso_atividades WHERE user_id = ? AND aula_id = ? AND section_id = ?',
-            (user_id, aula_id, section_id)
-        ).fetchone()
+        # Atualiza ou insere o progresso da seção
+        db.execute(
+            'INSERT INTO progresso_atividades (user_id, section_id, aula_id, completou) VALUES (?, ?, ?, ?) '
+            'ON CONFLICT(user_id, section_id, aula_id) DO UPDATE SET completou = 1',
+            (user_id, section_id, aula_id, 1)
+        )
+        db.commit()
 
-        if not exists:
-            db.execute(
-                'INSERT INTO progresso_atividades (user_id, aula_id, section_id, completou) VALUES (?, ?, ?, ?)',
-                (user_id, aula_id, section_id, 1)
-            )
-            db.commit()
-
+        # Verifica se todas as seções estão concluídas
         total_sections = db.execute(
             'SELECT COUNT(DISTINCT section) FROM respostas WHERE aula_id = ?',
             (aula_id,)
@@ -123,25 +120,13 @@ def update_progress():
         ).fetchone()[0]
 
         if completed_sections == total_sections:
-            aula_exists = db.execute(
-                'SELECT 1 FROM progresso_aulas WHERE user_id = ? AND aula_id = ?',
-                (user_id, aula_id)
-            ).fetchone()
-
-            if not aula_exists:
-                db.execute(
-                    'INSERT INTO progresso_aulas (user_id, aula_id, concluida) VALUES (?, ?, ?)',
-                    (user_id, aula_id, 1)
-                )
-            else:
-                db.execute(
-                    'UPDATE progresso_aulas SET concluida = 1 WHERE user_id = ? AND aula_id = ?',
-                    (user_id, aula_id)
-                )
-            db.commit()
+            # A aula está concluída
+            # Aqui, você pode realizar qualquer ação necessária, como registrar a conclusão em outro lugar ou apenas retornar uma mensagem.
+            return jsonify({'message': 'Aula concluída com sucesso!'}), 200
 
         return jsonify({'message': 'Progresso atualizado com sucesso!'}), 200
 
     except Exception as e:
-        db.rollback()  # Reverte a transação em caso de erro
+        db.rollback()
         return jsonify({'error': 'Erro ao atualizar progresso: ' + str(e)}), 500
+

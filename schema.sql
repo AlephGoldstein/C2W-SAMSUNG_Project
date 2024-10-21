@@ -44,12 +44,3 @@ CREATE TABLE IF NOT EXISTS progresso_atividades (
     FOREIGN KEY (user_id) REFERENCES usuarios(id),
     FOREIGN KEY (aula_id) REFERENCES aulas(id)
 );
-
-CREATE TABLE IF NOT EXISTS progresso_aulas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    aula_id INTEGER NOT NULL,
-    concluida BOOLEAN DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES usuarios(id),
-    FOREIGN KEY (aula_id) REFERENCES aulas(id)
-);
